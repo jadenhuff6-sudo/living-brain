@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Living Brain</title>
+<meta name="description" content="Circle of Light's theory of everything, as a living brain. Built from Mastering the Matrix.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Spectral:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#06060C; --ink:#EDEBF5; --ink-2:#A9A7B8; --ink-3:#6E6C80;
+  --teal:#5FE0EA; --gold:#E5BA6E; --mint:#8CF5C4; --coral:#FF8A7A; --lav:#B9A7FF; --bone:#F2F0E6;
+  --glass:rgba(14,14,26,.72); --line:rgba(255,255,255,.09);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased}
+#stage{position:fixed;inset:0;cursor:grab}
+#stage.dragging{cursor:grabbing}
+#stage.pointing{cursor:pointer}
+#labels{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+.lbl{position:absolute;left:0;top:0;transform:translate(-50%,-140%);white-space:nowrap;font-size:11px;font-weight:500;letter-spacing:.02em;color:var(--ink);opacity:0;transition:opacity .35s ease;text-shadow:0 0 12px rgba(0,0,0,.9),0 0 3px rgba(0,0,0,.9)}
+.lbl.region{font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--teal)}
+.lbl.core{font-size:13px;font-weight:700;color:var(--gold);letter-spacing:.04em}
+.lbl.hot{color:#fff;font-weight:600}
+
+header{position:fixed;top:20px;left:24px;pointer-events:none;max-width:min(520px,60vw)}
+header .eyebrow{font-size:10px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--teal)}
+header h1{font-family:Spectral,serif;font-weight:400;font-size:30px;line-height:1.1;margin-top:6px}
+header p{margin-top:8px;color:var(--ink-2);font-size:12.5px;line-height:1.5}
+
+.tools{position:fixed;top:20px;right:20px;display:flex;gap:8px;align-items:center}
+.search{position:relative}
+.search input{width:220px;background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line);color:var(--ink);border-radius:999px;padding:9px 14px 9px 34px;font:500 12.5px Inter,sans-serif;outline:none;transition:border-color .2s,width .3s}
+.search input:focus{border-color:rgba(95,224,234,.55);width:260px}
+.search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.7;z-index:2;color:var(--ink-2);pointer-events:none}
+.results{position:absolute;top:42px;right:0;width:280px;background:var(--glass);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--line);border-radius:14px;padding:6px;display:none;max-height:50vh;overflow:auto}
+.results button{display:flex;gap:8px;align-items:center;width:100%;text-align:left;background:none;border:0;color:var(--ink);padding:8px 10px;border-radius:9px;font:500 12.5px Inter,sans-serif;cursor:pointer}
+.results button:hover,.results button.on{background:rgba(255,255,255,.06)}
+.btn{background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line);color:var(--ink);border-radius:999px;padding:9px 14px;font:600 12px Inter,sans-serif;cursor:pointer;display:flex;gap:7px;align-items:center;transition:border-color .2s,background .2s}
+.btn:hover{border-color:rgba(95,224,234,.5)}
+.btn.on{background:rgba(95,224,234,.14);border-color:rgba(95,224,234,.6);color:var(--teal)}
+
+.legend{position:fixed;left:20px;bottom:20px;display:flex;flex-wrap:wrap;gap:6px;max-width:min(560px,calc(100vw - 40px))}
+.chip{display:flex;gap:7px;align-items:center;background:var(--glass);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:999px;padding:6px 11px;font:500 11.5px Inter,sans-serif;color:var(--ink-2);cursor:pointer;transition:all .2s}
+.chip:hover,.chip.on{color:var(--ink);border-color:rgba(95,224,234,.5)}
+.dot{width:7px;height:7px;border-radius:50%;flex:none;box-shadow:0 0 8px currentColor}
+
+.keys{position:fixed;right:20px;bottom:20px;display:flex;gap:10px;font-size:11px;color:var(--ink-3)}
+.keys span{display:flex;gap:5px;align-items:center}
+
+#hint{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);font-size:12px;color:var(--ink-2);background:var(--glass);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--line);padding:8px 14px;border-radius:999px;transition:opacity .8s;pointer-events:none}
+
+#tip{position:fixed;left:0;top:0;pointer-events:none;background:var(--glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--line);border-radius:12px;padding:9px 12px;max-width:260px;opacity:0;transform:translate(14px,14px);transition:opacity .15s}
+#tip .t{font-size:10px;letter-spacing:.14em;text-transform:uppercase;font-weight:600}
+#tip .n{font-size:13px;font-weight:600;margin-top:3px;line-height:1.35}
+
+#panel{position:fixed;top:72px;right:20px;bottom:20px;width:390px;background:var(--glass);backdrop-filter:blur(22px) saturate(1.2);-webkit-backdrop-filter:blur(22px) saturate(1.2);border:1px solid var(--line);border-radius:20px;transform:translateX(calc(100% + 40px));transition:transform .55s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column;overflow:hidden}
+#panel.open{transform:none}
+#panel .top{padding:20px 22px 14px;border-bottom:1px solid var(--line);position:relative}
+#panel .kind{font-size:10px;letter-spacing:.2em;text-transform:uppercase;font-weight:600;display:flex;gap:8px;align-items:center}
+#panel h2{font-family:Spectral,serif;font-weight:400;font-size:24px;line-height:1.2;margin-top:8px;padding-right:20px}
+#panel .status{display:inline-flex;margin-top:12px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px;border:1px solid var(--line);color:var(--ink-2)}
+#panel .close{position:absolute;top:16px;right:16px;width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:none;color:var(--ink-2);cursor:pointer;font-size:16px;line-height:1}
+#panel .close:hover{color:var(--ink);border-color:rgba(255,255,255,.3)}
+#panel .body{padding:16px 22px 22px;overflow:auto;flex:1}
+#panel .summary{font-size:14px;line-height:1.6;color:var(--ink)}
+#panel h3{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin:22px 0 10px}
+.quote{border-left:2px solid var(--teal);padding:2px 0 2px 14px;margin-bottom:14px}
+.quote p{font-family:Spectral,serif;font-style:italic;font-size:15.5px;line-height:1.5;color:var(--ink)}
+.quote small{display:block;margin-top:6px;font-size:11px;color:var(--ink-3);font-family:Inter,sans-serif;font-style:normal}
+.note{font-size:12.5px;line-height:1.55;color:var(--ink-2);background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:12px;padding:11px 13px}
+.links{display:flex;flex-wrap:wrap;gap:6px}
+.links button{display:flex;gap:7px;align-items:center;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--ink);border-radius:999px;padding:6px 11px;font:500 12px Inter,sans-serif;cursor:pointer;transition:all .2s;text-align:left}
+.links button:hover{border-color:rgba(95,224,234,.5);background:rgba(95,224,234,.08)}
+.step{display:flex;justify-content:space-between;gap:8px;padding:12px 22px;border-top:1px solid var(--line)}
+.step button{flex:1}
+
+@media (max-width:760px){
+  header h1{font-size:22px} header p{display:none}
+  .tools{top:auto;bottom:calc(env(safe-area-inset-bottom) + 16px);right:16px;left:16px;justify-content:space-between}
+  .search input{width:100%} .search{flex:1} .search input:focus{width:100%}
+  .results{top:auto;bottom:44px;left:0;right:auto;width:100%}
+  .legend{display:none} .keys{display:none} #hint{bottom:70px;white-space:nowrap}
+  #panel{top:auto;left:8px;right:8px;bottom:8px;width:auto;height:62vh;transform:translateY(calc(100% + 20px))}
+}
+@media (prefers-reduced-motion:reduce){#panel,.lbl,#tip{transition:none}}
+</style>
+</head>
+<body>
+<canvas id="stage"></canvas>
+<div id="labels"></div>
+
+<header>
+  <div class="eyebrow">Theory of Everything</div>
+  <h1>Living Brain</h1>
+  <p id="sub">Master your mind, master reality.</p>
+</header>
+
+<div class="tools">
+  <div class="search">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input id="q" placeholder="Search the brain" autocomplete="off">
+    <div class="results" id="results"></div>
+  </div>
+  <button class="btn" id="tourBtn" title="Guided tour (T)"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg><span>Tour</span></button>
+  <button class="btn" id="homeBtn" title="Whole brain (Esc)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg></button>
+</div>
+
+<div class="legend" id="legend"></div>
+<div class="keys"><span>Drag to turn</span><span>Scroll to zoom</span><span>← → to walk</span></div>
+<div id="hint">Hover any light to preview it. Click to fly in.</div>
+<div id="tip"><div class="t"></div><div class="n"></div></div>
+
+<aside id="panel" aria-live="polite">
+  <div class="top">
+    <div class="kind"><span class="dot"></span><span class="kindtxt"></span></div>
+    <h2></h2>
+    <span class="status"></span>
+    <button class="close" aria-label="Close">×</button>
+  </div>
+  <div class="body"></div>
+  <div class="step"><button class="btn" id="prevBtn">← Previous</button><button class="btn" id="nextBtn">Next →</button></div>
+</aside>
+
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+/* ---------------- DATA (from Living brain experiment 1, 2026-10-08) ---------------- */
+const TYPES = {
+  core:{label:'Core idea',color:'#E5BA6E'},
+  region:{label:'Region',color:'#5FE0EA'},
+  principle:{label:'Principle',color:'#5FE0EA'},
+  practice:{label:'Practice',color:'#8CF5C4'},
+  tension:{label:'Open tension',color:'#FF8A7A'},
+  resolved:{label:'Resolved tension',color:'#C9B6FF'},
+  question:{label:'Open question',color:'#B9A7FF'},
+  episode:{label:'Episode',color:'#F2F0E6'},
+  story:{label:'History and power',color:'#F0C987'},
+  experiment:{label:'Personal experiment',color:'#8CF5C4'}
+};
+// x = left/right, y = up, z = front(+)/back(-)
+const REGIONS = [
+  {id:'consciousness',name:'Consciousness',pos:[0.05,0.92,-0.05],color:'#7FE9F1'},
+  {id:'identity',name:'Identity',pos:[-0.62,0.55,0.78],color:'#5FE0EA'},
+  {id:'practice',name:'Practice',pos:[0.6,0.78,0.12],color:'#8CF5C4'},
+  {id:'experience',name:'Experience',pos:[1.02,0.05,0.2],color:'#9FF0D0'},
+  {id:'history',name:'History and power',pos:[-1.02,0.02,-0.15],color:'#F0C987'},
+  {id:'traditions',name:'Traditions and cosmology',pos:[0.0,0.4,-1.08],color:'#B9A7FF'},
+  {id:'science',name:'Science and reality',pos:[0.58,0.45,0.92],color:'#86D8FF'},
+  {id:'shadow',name:'Light and shadow',pos:[0.0,-0.12,0.05],color:'#C9B6FF'}
+];
+const Q = (q,src)=>({q,src});
+const NODES = [
+  {id:'thesis',type:'core',title:'Master your mind, master reality',regions:['consciousness','identity','shadow'],status:'The center of the map',
+   summary:'Your inner world shapes your outer world. Master it by returning to awareness, choosing what you feed your mind, and seeing which beliefs were handed to you. Then apply it, so the individual evolves and the collective follows.',
+   quotes:[Q('My inner world shapes my outer world, and everything in my life serves my growth.','My daily creed. Said every stream'),Q('If you can master your mind, you can master reality.','Circle of Light'),Q('How can you actually evolve as an individual so we can evolve as a collective?','MTM71 · 2:23:47')],
+   note:'Every quote on this map is word for word from the streams, with the episode and time.'},
+
+  {id:'P1',type:'principle',title:'Return to being. Meditation comes first',regions:['consciousness','practice'],status:'Growing · in all 4 episodes',
+   summary:'Meditation is the most important practice. Every stream opens with it.',
+   quotes:[Q('Just being able to return back to being has been super beneficial, and I think meditation is the most important thing we can be doing on this planet.','MTM63 · 80:53'),Q("Let's meditate.",'MTM65 · 0:00:04')],
+   note:'No outside study has been checked for this yet. "Consciousness is fundamental" is Rupert Spira\'s view, a philosophical position, not evidence.'},
+  {id:'P2',type:'principle',title:'Most beliefs were handed to us',regions:['identity','history'],status:'Growing · 3 episodes',
+   summary:'A belief you defend stops you from growing. Most of what we believe was given to us.',
+   quotes:[Q('Beliefs keep you limited. You\'re tied to this belief instead of being interested in growing.','MTM63 · 70:43, after Thomas Campbell'),Q("That's a big reason why we have our overall beliefs because they've been given to us.",'MTM70 · 1:48:02'),Q("Just narratives that we've been taught through history that just aren't accurate. Bring a lot of awareness to that.",'MTM71 · 2:23:47')],
+   note:'Checked: the idea really is Thomas Campbell\'s (My Big TOE, 2003). That confirms who said it, not that it is true.'},
+  {id:'P3',type:'principle',title:'We are all one being',regions:['consciousness','traditions'],status:'Seed · 1 episode',
+   summary:'Other people are you, playing a different role. Knowing that unites us where religion divides.',
+   quotes:[Q("We are all one being. We're all God. Having a human experience.",'MTM63 · 40:42'),Q("Religion divides us. Knowing that we're all one being unites us.",'MTM63 · 110:37')],
+   note:'A spiritual claim. It rests on experience, not research.'},
+  {id:'P4',type:'principle',title:'What you feed your mind becomes you',regions:['identity','science'],status:'Seed · 1 episode',
+   summary:'Consume less, create more. Whoever controls the feed controls the story.',
+   quotes:[Q('The more you put something in your brain, it does make you more emotionally tied to it and more extreme.','MTM70 · 0:42:52'),Q('If you control the algorithm, you control the narrative.','MTM70 · 0:44:50'),Q('What we need to do as a community is become less reliant on these algorithms.','MTM70 · 1:57:50')],
+   note:'The "feed makes you extreme" idea came from the guest and has not been checked.'},
+  {id:'P5',type:'principle',title:'No one should govern your mind',regions:['history','identity'],status:'Growing · 2 episodes',
+   summary:"If you don't create your reality, someone else's plan will.",
+   quotes:[Q("There's no right way to govern people's minds. There's no right way to control people.",'MTM70 · 1:10:21'),Q("It's time for us to wake up and take control of the reality we've been mindlessly creating.",'MTM70 · 1:42:44'),Q("They're using us to create the world that they are imagining.",'MTM71 · 2:20:26')],
+   note:'The principle stands on self-governance. The claims about a handful of families running things are still unproven.'},
+  {id:'P6',type:'principle',title:'Move every day, even on rest days',regions:['practice','experience'],status:'Growing · in all 4 episodes',
+   summary:'Gentle still counts. A rollout or light yoga keeps you moving.',
+   quotes:[Q('Every day, you should be moving, even on rest days. Like something like a rollout.','MTM70 · 0:28:10'),Q("But I'm always moving.",'MTM65 · 0:30:51'),Q("You're still doing something.",'MTM71 · 1:05:42')],
+   note:'My most repeated idea so far.'},
+  {id:'P7',type:'principle',title:'Change at a pace you can live with',regions:['practice','shadow'],status:'Seed · 1 episode',
+   summary:'Move toward what you believe, even if it is slow.',
+   quotes:[Q("It's gonna be a slow transition, but I'll get there eventually.",'MTM65 · 1:01:02')],
+   note:'A personal ethic, not a statistic.'},
+
+  {id:'PR1',type:'practice',title:'I Am God mantra',regions:['traditions','practice'],status:'Every stream',summary:'Grounded in truth, guided by peace, aligned with purpose. Said to open every stream.',quotes:[Q('I am God, grounded in truth, guided by peace, and aligned with purpose.','MTM71 · 0:04:11')]},
+  {id:'PR2',type:'practice',title:'Morning meditation',regions:['practice','consciousness'],status:'Every stream',summary:'Meditate before the show starts.',quotes:[Q('Super beneficial.','MTM63 · 80:53')]},
+  {id:'PR3',type:'practice',title:'Ask: what is aware of my experience?',regions:['consciousness'],status:'Proposed',summary:"Rupert Spira's practice. My answer: \"Amen.\"",quotes:[Q('Take a step back. What is it that is aware of my experience?','Rupert Spira, MTM63 · 108:27')]},
+  {id:'PR4',type:'practice',title:'"This is me meeting me"',regions:['identity','experience'],status:'Proposed',summary:"For meeting someone new. A co-host offered it, and I said \"It's fire.\"",quotes:[]},
+  {id:'PR5',type:'practice',title:'The rollout',regions:['practice','experience'],status:'My routine',summary:'Calf, back of the knee, hamstring, then glute, IT band, quad and hip flexor.',quotes:[Q('Feel where that tightness or soreness is, where it hurts the most, and roll that out. Then I work my way up to the glute.','MTM65 · 0:26:28')]},
+  {id:'PR6',type:'practice',title:'Move on rest days',regions:['practice'],status:'My routine',summary:'A rollout or light yoga on off days.',quotes:[Q('Ooh, I felt good.','MTM71 · 1:05:10')]},
+  {id:'PR7',type:'practice',title:'Consume less, create more',regions:['identity','science'],status:'In progress',summary:'Make your own content instead of only taking it in.',quotes:[]},
+  {id:'PR8',type:'practice',title:'When it is loud, ask what is quiet',regions:['history','science'],status:'My question',summary:'When the feed is noisy, ask what is happening out of sight.',quotes:[Q('What are they doing now while it\'s so noisy?','MTM70 · 1:51:03')]},
+  {id:'PR9',type:'practice',title:'Ask who drafted it first',regions:['history','identity'],status:'From MTM71',summary:'Pick one thing you repeat as fact and ask who wrote it first.',quotes:[]},
+
+
+  {id:'T1',type:'tension',title:'Test the claim, or back it?',regions:['science','history'],status:'Open',summary:'I want claims pressure-tested, and I also ask the crew to build the guest\'s case. The crew needs one clear rule for when to do which.',quotes:[Q("Can we pressure test this?",'MTM63 · 102:32'),Q("We should be helping provide evidence for their claims, not refuting everything they're saying.",'MTM65 · 1:34:18')]},
+  {id:'T2',type:'resolved',title:'No evil, and yet hidden power',regions:['shadow','history'],status:'Resolved · Oct 8',summary:'Not a contradiction. We decide what we call evil and what we call illusion, because perception creates reality. Naming who holds power fits inside that.',
+   quotes:[Q("We define what is evil and what's an illusion. Our perception creates reality, so that's what I mean by 'there's no evil. It's an illusion.'",'Circle of Light, October 8'),Q("Everything else is an illusion.",'MTM63 · 42:11')]},
+  {id:'T3',type:'tension',title:'Free minds from the algorithm, or play it?',regions:['science','identity'],status:'Open',summary:'I want people less reliant on algorithms, and I use catchy titles to reach them. Medicine with the candy.',quotes:[Q('We got to give the medicine with the candy.','MTM70 · 1:53:39')]},
+
+  {id:'Q1',type:'question',title:'Does consciousness evolve?',regions:['consciousness','science'],status:'Open',summary:'Spira says no. Campbell says yes. Still asking.',quotes:[Q('So what does that mean exactly?','MTM63 · 103:11')]},
+  {id:'Q2',type:'question',title:'How do you push truth without the algorithm owning you?',regions:['science','history'],status:'Open',summary:'From MTM70.',quotes:[Q('As a content creator who is looking to push the truth, how does one go about that without falling victim to them owning the algorithm?','MTM70 · 1:37:11')]},
+  {id:'Q3',type:'question',title:'Where does mastering the mind start?',regions:['consciousness','identity'],status:'Open',summary:'With stillness, with what you feed it, or with questioning what you were taught?',quotes:[]},
+  {id:'Q4',type:'question',title:'How does exposing history become practice?',regions:['history','practice'],status:'Open',summary:'Nothing in the brain answers this yet. Coming episodes will.',quotes:[Q('How can you actually apply this information?','MTM71 · 2:23:47')]},
+
+  {id:'S1',type:'story',title:'The Bundys: the pen, not the blood',regions:['history'],status:'On the record',summary:'Harvey Bundy ran the atomic bomb paperwork. McGeorge drafted the article that defended Hiroshima. William\'s bureau drafted the Vietnam war resolution before Tonkin.',quotes:[Q('They didn\'t drop the bomb. They wrote the story.','MTM71')],note:'Documented. Ted Bundy is not part of this family; Bundy was his stepdad\'s name.'},
+  {id:'S2',type:'story',title:'Skull and Bones',regions:['history','traditions'],status:'On the record',summary:'Fifteen Yale seniors a year, about 800 living members. A death and rebirth initiation, and secrets that bind members for life.',quotes:[Q('That should tell you everything you need to know about there being a red side and a blue side.','MTM71 · Bush vs Kerry')],note:'The Geronimo skull story is unproven.'},
+  {id:'S3',type:'story',title:'Who wrote the Hiroshima story',regions:['history','shadow'],status:'On the record',summary:'The "over a million casualties" line comes from a 1947 Harper\'s article signed by Stimson and drafted by McGeorge Bundy.',quotes:[Q("There's no justification for dropping bombs.",'MTM71 · 1:41:06')],note:'The 1946 Strategic Bombing Survey said Japan would likely have surrendered by end of 1945. Some wartime studies did project very high invasion casualties.'},
+  {id:'S4',type:'story',title:'Tonkin: the permission slip came first',regions:['history'],status:'On the record',summary:'A war resolution was drafted in June 1964. The August 4 attack never happened, per the NSA\'s own historian. Congress passed it 88 to 2 and 416 to 0.',quotes:[]},
+  {id:'S5',type:'story',title:'Who controls money creation',regions:['history','science'],status:'Guest claim',summary:'Simon Dixon\'s case: real power sits with whoever controls how money gets created, not presidents.',quotes:[],note:'From MTM70. The Fort Knox "double-booked" and BIS "own army" claims were fact-checked wrong.'},
+  {id:'S6',type:'story',title:'The 13 families',regions:['history','shadow'],status:'Theory, unproven',summary:'Fritz Springmeyer\'s claim. The series tests it family by family: the Astors, the Bundys, next the Collins.',quotes:[Q('Families that are in power use countries to wage war, and they hide in the shadows while they reap all the benefits.','MTM71 · 2:12:18')],note:'The access and the paper trail are documented. One hidden family running it all is not.'},
+
+  {id:'E63',type:'episode',title:'MTM63 · Rupert Spira: You Were Never Born',regions:['consciousness','traditions'],status:'Ingested',summary:'Consciousness, oneness, and the case for having no beliefs.',quotes:[]},
+  {id:'E65',type:'episode',title:"MTM65 · Kip Andersen's Christspiracy",regions:['traditions','experience'],status:'Ingested',summary:'Food, conscience, and changing at a pace you can live with.',quotes:[]},
+  {id:'E70',type:'episode',title:'MTM70 · Simon Dixon: Who Really Runs the World?',regions:['history','science'],status:'Ingested',summary:'Money creation, the algorithm, and taking back your mind.',quotes:[]},
+  {id:'E71',type:'episode',title:'MTM71 · Ghostwriters of the Century',regions:['history'],status:'Ingested',summary:'The Bundys, Skull and Bones, Hiroshima and Tonkin. The theory of everything named on air.',quotes:[]}
+];
+REGIONS.forEach(r=>NODES.push({id:r.id,type:'region',title:r.name,regions:[r.id],status:'Region',summary:'',quotes:[],_region:r}));
+
+const EDGES = [
+  ['thesis','P1'],['thesis','P2'],['thesis','P4'],['thesis','P5'],['thesis','P3'],['thesis','T2'],['thesis','Q3'],
+  ['P1','PR2'],['P1','PR3'],['P1','PR1'],['P1','Q3'],['P1','Q1'],
+  ['P2','PR9'],['P2','T1'],['P2','Q3'],['P2','S6'],
+  ['P3','PR4'],['P3','T2'],['P3','PR1'],
+  ['P4','PR7'],['P4','PR8'],['P4','T3'],['P4','Q2'],['P4','Q3'],
+  ['P5','PR8'],['P5','S6'],['P5','S5'],['P5','T2'],['P5','PR9'],
+  ['P6','PR5'],['P6','PR6'],
+  
+  ['S1','S2'],['S1','S3'],['S1','S4'],['S1','S6'],['S3','PR9'],['S3','T2'],['S6','T2'],['S5','S6'],
+  ['Q4','PR9'],['Q4','S6'],['T1','S6'],['Q2','T3'],
+  ['E63','P1'],['E63','P2'],['E63','P3'],['E63','PR3'],['E63','PR4'],['E63','Q1'],['E63','T1'],
+  ['E65','P6'],['E65','P7'],['E65','PR5'],['E65','T1'],
+  ['E70','P2'],['E70','P4'],['E70','P5'],['E70','P6'],['E70','T3'],['E70','Q2'],['E70','S5'],['E70','PR8'],
+  ['E71','P2'],['E71','P5'],['E71','P6'],['E71','S1'],['E71','S2'],['E71','S3'],['E71','S4'],['E71','S6'],['E71','Q4'],['E71','PR9'],
+  ['PR1','E63'],['PR1','E65'],['PR1','E70'],['PR1','E71']
+];
+NODES.forEach(n=>{ if(n.type!=='region') n.regions.forEach(r=>EDGES.push([n.id,r])); });
+const TOUR = ['thesis','P1','P2','P3','P4','P5','P6','P7','T2','S1','S6','Q4','PR9'];
+
+/* ---------------- SCENE ---------------- */
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const canvas = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setClearColor(0x06060c,1);
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x06060c,0.16);
+const camera = new THREE.PerspectiveCamera(42,1,0.01,100);
+const HOME = {pos:new THREE.Vector3(2.35,0.95,2.9),target:new THREE.Vector3(0,0.12,0)};
+camera.position.copy(HOME.pos);
+const controls = new OrbitControls(camera,canvas);
+controls.target.copy(HOME.target);
+controls.enableDamping = true; controls.dampingFactor = .06;
+controls.rotateSpeed = .55; controls.zoomSpeed = .7;
+controls.minDistance = .55; controls.maxDistance = 9;
+controls.enablePan = false;
+controls.autoRotate = !reduce; controls.autoRotateSpeed = .45;
+
+const brain = new THREE.Group(); scene.add(brain);
+
+/* glow texture */
+function glowTex(){
+  const c=document.createElement('canvas'); c.width=c.height=128; const g=c.getContext('2d');
+  const r=g.createRadialGradient(64,64,0,64,64,64);
+  r.addColorStop(0,'rgba(255,255,255,1)'); r.addColorStop(.18,'rgba(255,255,255,.75)');
+  r.addColorStop(.42,'rgba(255,255,255,.18)'); r.addColorStop(1,'rgba(255,255,255,0)');
+  g.fillStyle=r; g.fillRect(0,0,128,128); return new THREE.CanvasTexture(c);
+}
+const GLOW = glowTex();
+
+/* brain shell: procedural cortex point cloud */
+function rand(seed){ let s=seed; return ()=>{ s=(s*16807)%2147483647; return (s-1)/2147483646; }; }
+const R = rand(7);
+function cortexPoint(side){
+  // hemisphere ellipsoid with folds
+  const u=R()*Math.PI*2, v=Math.acos(2*R()-1);
+  let x=Math.sin(v)*Math.cos(u), y=Math.cos(v), z=Math.sin(v)*Math.sin(u);
+  const fold = 1 + .045*Math.sin(u*9+v*5)*Math.sin(v*11-u*3) + .025*Math.sin(u*23+v*17);
+  let px = x*0.66*fold, py = y*0.8*fold, pz = z*1.2*fold;
+  if (px*side < -0.02) px *= 0.25;            // flatten medial wall
+  if (py < -0.35) py = -0.35 + (py+0.35)*0.45; // flatten base
+  if (pz > 0.6 && py > 0.2) py -= (pz-0.6)*0.25; // slope frontal lobe
+  if (py < 0 && Math.abs(pz) < .5) px += side*.08*(-py); // temporal bulge
+  return [px + side*0.55, py + 0.18, pz];
+}
+const shellPts=[], shellRnd=[];
+for(let i=0;i<16000;i++){ const p=cortexPoint(i%2?1:-1); shellPts.push(...p); shellRnd.push(R()); }
+// cerebellum
+for(let i=0;i<1600;i++){
+  const u=R()*Math.PI*2, v=Math.acos(2*R()-1);
+  const f = 1+.05*Math.sin(v*28);
+  shellPts.push(Math.sin(v)*Math.cos(u)*0.78*f, -0.42+Math.cos(v)*0.3*f, -0.82+Math.sin(v)*Math.sin(u)*0.38*f); shellRnd.push(R());
+}
+// brainstem
+for(let i=0;i<500;i++){ const a=R()*Math.PI*2, h=R(); shellPts.push(Math.cos(a)*0.13*(1-h*.2), -0.35-h*0.75, -0.42-h*0.12+Math.sin(a)*0.13); shellRnd.push(R()); }
+// inner volume haze
+for(let i=0;i<2200;i++){ const p=cortexPoint(i%2?1:-1); const k=.35+R()*.55; shellPts.push(p[0]*k+(i%2?1:-1)*.2*(1-k),p[1]*k+.08,p[2]*k); shellRnd.push(R()*.5); }
+
+const shellGeo = new THREE.BufferGeometry();
+shellGeo.setAttribute('position',new THREE.Float32BufferAttribute(shellPts,3));
+shellGeo.setAttribute('aRnd',new THREE.Float32BufferAttribute(shellRnd,1));
+const shellMat = new THREE.ShaderMaterial({
+  transparent:true, depthWrite:false, blending:THREE.AdditiveBlending,
+  uniforms:{uTime:{value:0},uPR:{value:renderer.getPixelRatio()},uFocus:{value:new THREE.Vector3(0,0,0)},uFocusAmt:{value:0}},
+  vertexShader:`
+    attribute float aRnd; uniform float uTime; uniform float uPR; uniform vec3 uFocus; uniform float uFocusAmt;
+    varying float vA; varying float vW;
+    void main(){
+      vec4 mv = modelViewMatrix*vec4(position,1.0);
+      gl_Position = projectionMatrix*mv;
+      float tw = .45+.55*sin(uTime*1.3 + aRnd*40.0);
+      float wave = smoothstep(.22,0.0,abs(position.z - (mod(uTime*.35,3.4)-1.7)));
+      float wave2 = smoothstep(.18,0.0,abs(position.y - (mod(uTime*.22+1.0,2.2)-1.0)))*.6;
+      float near = smoothstep(.75,0.0,distance(position,uFocus))*uFocusAmt;
+      vW = wave+wave2+near*1.4;
+      vA = (.30+.34*tw)*(.6+aRnd) + vW*.7;
+      gl_PointSize = min((1.9+aRnd*2.3+vW*2.0)*uPR*(3.4/-mv.z), 4.5*uPR);
+    }`,
+  fragmentShader:`
+    varying float vA; varying float vW;
+    void main(){
+      vec2 c = gl_PointCoord-.5; float d = length(c);
+      if(d>.5) discard;
+      float a = smoothstep(.5,0.0,d)*vA;
+      vec3 col = mix(vec3(.33,.80,.88), vec3(.80,.98,1.0), clamp(vW,0.0,1.0));
+      gl_FragColor = vec4(col*a, a);
+    }`
+});
+brain.add(new THREE.Points(shellGeo,shellMat));
+
+/* starfield */
+{
+  const p=[]; for(let i=0;i<1400;i++){ const r=8+R()*18, u=R()*Math.PI*2, v=Math.acos(2*R()-1); p.push(r*Math.sin(v)*Math.cos(u),r*Math.cos(v),r*Math.sin(v)*Math.sin(u)); }
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));
+  scene.add(new THREE.Points(g,new THREE.PointsMaterial({size:.035,color:0x8890b0,transparent:true,opacity:.55,depthWrite:false,fog:false})));
+}
+
+/* ---------------- GRAPH LAYOUT ---------------- */
+const byId = {}; NODES.forEach(n=>byId[n.id]=n);
+const regionPos = {}; REGIONS.forEach(r=>regionPos[r.id]=new THREE.Vector3(...r.pos));
+const SIZE = {core:.075,region:.05,principle:.046,practice:.03,tension:.036,resolved:.036,question:.03,episode:.036,story:.038,experiment:.03};
+const LR = rand(11);
+NODES.forEach(n=>{
+  if(n.type==='region'){ n.pos = regionPos[n.id].clone(); return; }
+  if(n.type==='core'){ n.pos = new THREE.Vector3(0,.48,.28); return; }
+  const c = new THREE.Vector3(); n.regions.forEach(r=>c.add(regionPos[r])); c.multiplyScalar(1/n.regions.length);
+  c.add(new THREE.Vector3((LR()-.5)*.38,(LR()-.5)*.3,(LR()-.5)*.38));
+  n.pos = c;
+});
+// relax: repel, keep near home, stay inside brain
+const homes = NODES.map(n=>n.pos.clone());
+function insideBrain(p){
+  const side = p.x>=0?1:-1; const cx=side*.55;
+  const q = new THREE.Vector3((p.x-cx)/.6,(p.y-.18)/.72,p.z/1.1);
+  const L = q.length(); if(L>0.92){ q.multiplyScalar(.92/L); p.set(q.x*.6+cx,q.y*.72+.18,q.z*1.1); }
+  if(p.y<-.22) p.y=-.22;
+}
+for(let it=0;it<260;it++){
+  for(let i=0;i<NODES.length;i++){
+    const a=NODES[i]; if(a.type==='core'||a.type==='region') continue;
+    const f=new THREE.Vector3();
+    for(let j=0;j<NODES.length;j++){ if(i===j) continue; const b=NODES[j];
+      const d=a.pos.clone().sub(b.pos); const L=d.length()+1e-4; const min=.24;
+      if(L<min) f.add(d.multiplyScalar((min-L)/L*.5)); }
+    f.add(homes[i].clone().sub(a.pos).multiplyScalar(.04));
+    a.pos.add(f); insideBrain(a.pos);
+  }
+}
+
+/* nodes */
+const pickables=[];
+NODES.forEach((n,i)=>{
+  const col = new THREE.Color(n.type==='region'?n._region.color:TYPES[n.type].color);
+  n.color = col; n.phase = i*1.7;
+  const s = SIZE[n.type];
+  const core = new THREE.Mesh(new THREE.SphereGeometry(s*.42,16,16), new THREE.MeshBasicMaterial({color:col,transparent:true}));
+  core.position.copy(n.pos);
+  const halo = new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW,color:col,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:n.type==='region'?.55:.9}));
+  halo.position.copy(n.pos); halo.scale.setScalar(s*(n.type==='region'?7:5));
+  if(n.type==='region'){ core.visible=false; }
+  const hit = new THREE.Mesh(new THREE.SphereGeometry(Math.max(s*1.25,.055),8,8), new THREE.MeshBasicMaterial({visible:false}));
+  hit.position.copy(n.pos); hit.userData.node=n;
+  brain.add(core,halo,hit); pickables.push(hit);
+  n.core=core; n.halo=halo; n.baseScale=halo.scale.x; n.flash=0; n.dim=1;
+  n.neighbors=new Set(); n.edges=[];
+});
+
+/* edges as curved fibers */
+const edgeObjs=[];
+EDGES.forEach(([a,b])=>{
+  const A=byId[a], B=byId[b]; if(!A||!B) return;
+  if(A.neighbors.has(B)) return;
+  A.neighbors.add(B); B.neighbors.add(A);
+  const mid = A.pos.clone().add(B.pos).multiplyScalar(.5);
+  mid.multiplyScalar(.78).add(new THREE.Vector3(0,.06,0));
+  const curve = new THREE.QuadraticBezierCurve3(A.pos.clone(),mid,B.pos.clone());
+  const pts = curve.getPoints(28);
+  const isRegion = A.type==='region'||B.type==='region';
+  const mat = new THREE.LineBasicMaterial({color:isRegion?0x3fb7c2:0x7fe9f1,transparent:true,opacity:isRegion?.07:.16,depthWrite:false,blending:THREE.AdditiveBlending});
+  const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),mat);
+  brain.add(line);
+  const e={a:A,b:B,curve,line,mat,base:mat.opacity,isRegion};
+  edgeObjs.push(e); A.edges.push(e); B.edges.push(e);
+});
+
+/* pulses */
+const pulses=[];
+const pulseMat = c=>new THREE.SpriteMaterial({map:GLOW,color:c,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending});
+function firePulse(e,from,speed=1,bright=1){
+  if(reduce) return;
+  const fwd = e.a===from;
+  const s = new THREE.Sprite(pulseMat(from.color)); s.scale.setScalar(.045*bright);
+  brain.add(s); pulses.push({s,e,t:0,fwd,speed:(.55+Math.random()*.4)*speed,bright});
+}
+function fireNode(n,speed=1,bright=1,skipRegions=false){
+  n.flash=1;
+  n.edges.forEach(e=>{ if(skipRegions && e.isRegion) return; firePulse(e,n,speed,bright); });
+}
+
+/* ---------------- LABELS ---------------- */
+const labelsEl=document.getElementById('labels');
+NODES.forEach(n=>{
+  const d=document.createElement('div');
+  d.className='lbl'+(n.type==='region'?' region':'')+(n.type==='core'?' core':'');
+  d.textContent=n.type==='episode'?n.title.split(' · ')[0]:n.title;
+  labelsEl.appendChild(d); n.label=d;
+});
+
+/* ---------------- UI ---------------- */
+const legend=document.getElementById('legend');
+REGIONS.forEach(r=>{
+  const b=document.createElement('button'); b.className='chip';
+  b.innerHTML='<span class="dot"></span>'; b.querySelector('.dot').style.color=r.color; b.querySelector('.dot').style.background=r.color;
+  b.appendChild(document.createTextNode(r.name)); b.onclick=()=>{stopTour();select(byId[r.id]);};
+  legend.appendChild(b); r.chip=b;
+});
+
+const panel=document.getElementById('panel');
+const pBody=panel.querySelector('.body');
+function el(tag,cls,txt){ const e=document.createElement(tag); if(cls) e.className=cls; if(txt!=null) e.textContent=txt; return e; }
+function fillPanel(n){
+  const t = n.type==='region'?{label:'Region',color:n._region.color}:TYPES[n.type];
+  const dot=panel.querySelector('.kind .dot'); dot.style.color=t.color; dot.style.background=t.color;
+  const kt=panel.querySelector('.kindtxt'); kt.textContent=t.label; kt.style.color=t.color;
+  panel.querySelector('h2').textContent=n.title;
+  panel.querySelector('.status').textContent=n.status;
+  pBody.innerHTML='';
+  if(n.summary) pBody.appendChild(el('p','summary',n.summary));
+  if(n.type==='region'){
+    const members=NODES.filter(m=>m.type!=='region'&&m.regions.includes(n.id));
+    pBody.appendChild(el('p','summary',members.length+' ideas live in this part of the brain.'));
+  }
+  if(n.quotes&&n.quotes.length){
+    pBody.appendChild(el('h3',null,'In my words'));
+    n.quotes.forEach(q=>{ const b=el('div','quote'); b.appendChild(el('p',null,'“'+q.q+'”')); b.appendChild(el('small',null,q.src)); pBody.appendChild(b); });
+  }
+  if(n.note){ pBody.appendChild(el('h3',null,'What holds up')); pBody.appendChild(el('div','note',n.note)); }
+  const nb=[...n.neighbors].sort((a,b)=>(a.type==='region')-(b.type==='region'));
+  if(nb.length){
+    pBody.appendChild(el('h3',null,'Connected'));
+    const wrap=el('div','links');
+    nb.forEach(m=>{ const b=el('button'); const d=el('span','dot'); const c=m.type==='region'?m._region.color:TYPES[m.type].color; d.style.color=c; d.style.background=c; b.appendChild(d); b.appendChild(document.createTextNode(m.title));
+      b.onmouseenter=()=>{hoverNode=m;}; b.onmouseleave=()=>{hoverNode=null;};
+      b.onclick=()=>{stopTour();select(m);}; wrap.appendChild(b); });
+    pBody.appendChild(wrap);
+  }
+  pBody.scrollTop=0;
+}
+panel.querySelector('.close').onclick=()=>{stopTour();home();};
+
+/* ---------------- CAMERA FLIGHT ---------------- */
+let flight=null;
+const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+function flyTo(pos,target,ms=1300){
+  const sp=camera.position.clone(), st=controls.target.clone();
+  if(reduce){ camera.position.copy(pos); controls.target.copy(target); return; }
+  flight={sp,st,ep:pos.clone(),et:target.clone(),t0:performance.now(),ms};
+}
+function worldPos(n){ return n.pos.clone().applyMatrix4(brain.matrixWorld); }
+let selected=null, hoverNode=null;
+function select(n){
+  if(!n) return;
+  selected=n; fillPanel(n); panel.classList.add('open');
+  const wp=worldPos(n);
+  const out = wp.clone().sub(new THREE.Vector3(0,.15,0)); if(out.length()<.2) out.set(.6,.3,1);
+  out.normalize();
+  const dist = n.type==='region'?2.0:(n.type==='core'?2.4:1.55);
+  const narrow = innerWidth<760;
+  const camPos = wp.clone().add(out.multiplyScalar(narrow?dist*1.5:dist)).add(new THREE.Vector3(0,.12,0));
+  // shift target so node sits left of the panel on desktop
+  const tgt = wp.clone();
+  if(!narrow){ const right=new THREE.Vector3().subVectors(camPos,tgt).cross(camera.up).normalize(); tgt.add(right.multiplyScalar(-dist*.22)); }
+  else { tgt.y -= dist*.35; }
+  flyTo(camPos,tgt);
+  controls.autoRotate=false;
+  fireNode(n,1.2,1.4);
+  REGIONS.forEach(r=>r.chip.classList.toggle('on',n.type==='region'&&r.id===n.id));
+  hideHint();
+}
+function home(){
+  selected=null; panel.classList.remove('open');
+  REGIONS.forEach(r=>r.chip.classList.remove('on'));
+  flyTo(HOME.pos,HOME.target,1500);
+  controls.autoRotate=!reduce;
+}
+document.getElementById('homeBtn').onclick=()=>{stopTour();home();};
+
+/* ---------------- TOUR ---------------- */
+let touring=false, tourIdx=-1, tourTimer=null;
+const tourBtn=document.getElementById('tourBtn');
+function step(dir){
+  const order = TOUR;
+  let i = selected? order.indexOf(selected.id) : -1;
+  if(i===-1){ const all=NODES.filter(n=>n.type!=='region').map(n=>n.id); i=selected?all.indexOf(selected.id):-1;
+    const next=all[(i+dir+all.length)%all.length]; select(byId[next]); return; }
+  select(byId[order[(i+dir+order.length)%order.length]]);
+}
+function startTour(){ touring=true; tourBtn.classList.add('on'); tourBtn.querySelector('span').textContent='Touring';
+  tourIdx = selected? Math.max(0,TOUR.indexOf(selected.id)) : 0; select(byId[TOUR[tourIdx]]);
+  clearInterval(tourTimer); tourTimer=setInterval(()=>{ tourIdx=(tourIdx+1)%TOUR.length; select(byId[TOUR[tourIdx]]); },7500); }
+function stopTour(){ if(!touring) return; touring=false; clearInterval(tourTimer); tourBtn.classList.remove('on'); tourBtn.querySelector('span').textContent='Tour'; }
+tourBtn.onclick=()=>touring?stopTour():startTour();
+document.getElementById('prevBtn').onclick=()=>{stopTour();step(-1);};
+document.getElementById('nextBtn').onclick=()=>{stopTour();step(1);};
+
+/* ---------------- SEARCH ---------------- */
+const qIn=document.getElementById('q'), resEl=document.getElementById('results');
+let resList=[], resIdx=0;
+function hay(n){ return (n.title+' '+n.summary+' '+(n.quotes||[]).map(q=>q.q).join(' ')).toLowerCase(); }
+function renderResults(){
+  const s=qIn.value.trim().toLowerCase();
+  if(!s){ resEl.style.display='none'; resList=[]; return; }
+  resList=NODES.filter(n=>hay(n).includes(s)).slice(0,10); resIdx=0;
+  resEl.innerHTML='';
+  if(!resList.length){ resEl.appendChild(el('div','note','Nothing yet. This brain grows with every episode.')); }
+  resList.forEach((n,i)=>{ const b=el('button',i===0?'on':null); const d=el('span','dot'); const c=n.type==='region'?n._region.color:TYPES[n.type].color; d.style.color=c; d.style.background=c; b.appendChild(d); b.appendChild(document.createTextNode(n.title));
+    b.onmouseenter=()=>{hoverNode=n;}; b.onmouseleave=()=>{hoverNode=null;};
+    b.onclick=()=>{stopTour();select(n);qIn.value='';renderResults();qIn.blur();}; resEl.appendChild(b); });
+  resEl.style.display='block';
+}
+qIn.addEventListener('input',renderResults);
+qIn.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&resList[resIdx]){ stopTour(); select(resList[resIdx]); qIn.value=''; renderResults(); qIn.blur(); }
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){ e.preventDefault(); resIdx=(resIdx+(e.key==='ArrowDown'?1:-1)+resList.length)%Math.max(resList.length,1);
+    [...resEl.children].forEach((c,i)=>c.classList.toggle('on',i===resIdx)); hoverNode=resList[resIdx]; }
+  if(e.key==='Escape'){ qIn.value=''; renderResults(); qIn.blur(); }
+  e.stopPropagation();
+});
+
+/* ---------------- POINTER ---------------- */
+const ray=new THREE.Raycaster(), mouse=new THREE.Vector2(-9,-9);
+const tip=document.getElementById('tip');
+let downAt=null, moved=false, lastInput=performance.now();
+canvas.addEventListener('pointermove',e=>{
+  mouse.set(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1);
+  tip.style.left=e.clientX+'px'; tip.style.top=e.clientY+'px';
+  if(downAt && Math.hypot(e.clientX-downAt[0],e.clientY-downAt[1])>5){ moved=true; canvas.classList.add('dragging'); }
+  lastInput=performance.now();
+});
+canvas.addEventListener('pointerleave',()=>{ mouse.set(-9,-9); });
+canvas.addEventListener('pointerdown',e=>{ downAt=[e.clientX,e.clientY]; moved=false; stopTour(); hideHint(); lastInput=performance.now(); });
+canvas.addEventListener('pointerup',e=>{
+  canvas.classList.remove('dragging');
+  if(downAt && !moved){
+    mouse.set(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1);
+    ray.setFromCamera(mouse,camera);
+    const hit=ray.intersectObjects(pickables)[0];
+    if(hit) select(hit.object.userData.node); else if(selected) home();
+  }
+  downAt=null;
+});
+addEventListener('keydown',e=>{
+  if(e.target===qIn) return;
+  if(e.key==='Escape'){ stopTour(); home(); }
+  if(e.key==='ArrowRight'){ stopTour(); step(1); }
+  if(e.key==='ArrowLeft'){ stopTour(); step(-1); }
+  if(e.key==='t'||e.key==='T'){ touring?stopTour():startTour(); }
+  if(e.key==='/'){ e.preventDefault(); qIn.focus(); }
+  lastInput=performance.now();
+});
+const hint=document.getElementById('hint'); let hintGone=false;
+function hideHint(){ if(hintGone) return; hintGone=true; hint.style.opacity=0; }
+setTimeout(hideHint,9000);
+
+/* ---------------- RESIZE ---------------- */
+function resize(){ renderer.setSize(innerWidth,innerHeight,false); camera.aspect=innerWidth/innerHeight;
+  camera.fov = innerWidth<760?54:42; camera.updateProjectionMatrix(); shellMat.uniforms.uPR.value=renderer.getPixelRatio(); }
+addEventListener('resize',resize); resize();
+
+/* ---------------- LOOP ---------------- */
+const clock=new THREE.Clock(); let nextFire=1.2;
+const tmp=new THREE.Vector3();
+function frame(){
+  const dt=Math.min(clock.getDelta(),.05), t=clock.elapsedTime;
+  shellMat.uniforms.uTime.value=t;
+
+  if(flight){
+    const k=Math.min(1,(performance.now()-flight.t0)/flight.ms), e=ease(k);
+    camera.position.lerpVectors(flight.sp,flight.ep,e); controls.target.lerpVectors(flight.st,flight.et,e);
+    if(k>=1) flight=null;
+  }
+  controls.update();
+
+  // hover
+  ray.setFromCamera(mouse,camera);
+  const h=ray.intersectObjects(pickables)[0];
+  const pointerHover = h?h.object.userData.node:null;
+  canvas.classList.toggle('pointing',!!pointerHover);
+  const hv = hoverNode||pointerHover;
+  if(pointerHover){ const ty=pointerHover.type==='region'?{label:'Region',color:pointerHover._region.color}:TYPES[pointerHover.type];
+    tip.querySelector('.t').textContent=ty.label; tip.querySelector('.t').style.color=ty.color; tip.querySelector('.n').textContent=pointerHover.title; tip.style.opacity=1; }
+  else tip.style.opacity=0;
+
+  // focus set
+  const focus = hv||selected;
+  const near = new Set(); if(focus){ near.add(focus); focus.neighbors.forEach(m=>near.add(m)); }
+  if(focus){ shellMat.uniforms.uFocus.value.copy(focus.pos); }
+  shellMat.uniforms.uFocusAmt.value += ((focus?1:0)-shellMat.uniforms.uFocusAmt.value)*.06;
+
+  // ambient firing: the brain is thinking
+  if(!reduce && t>nextFire){
+    const pool = NODES.filter(n=>n.type!=='region');
+    const n = (focus && Math.random()<.55)? [...near][Math.floor(Math.random()*near.size)] : pool[Math.floor(Math.random()*pool.length)];
+    fireNode(n,1,1,true); nextFire=t+.5+Math.random()*.9;
+  }
+  if(selected && !reduce && Math.random()<dt*1.2) fireNode(selected,1.1,1.2);
+
+  // nodes
+  NODES.forEach(n=>{
+    const target = focus? (near.has(n)?1:.18) : 1;
+    n.dim += (target-n.dim)*.12;
+    n.flash = Math.max(0,n.flash-dt*1.6);
+    const breathe = reduce?1:1+.08*Math.sin(t*1.5+n.phase);
+    const big = (n===focus?1.6:1) + n.flash*.7;
+    n.halo.scale.setScalar(n.baseScale*breathe*big);
+    n.halo.material.opacity = (n.type==='region'?.5:.85)*n.dim + n.flash*.3;
+    n.core.material.opacity = Math.min(1,.25+n.dim);
+    // label
+    tmp.copy(n.pos).applyMatrix4(brain.matrixWorld);
+    const dCam = tmp.distanceTo(camera.position);
+    tmp.project(camera);
+    const L=n.label;
+    if(tmp.z>1){ L.style.opacity=0; return; }
+    L.style.transform=`translate(${(tmp.x*.5+.5)*innerWidth}px,${(-tmp.y*.5+.5)*innerHeight}px) translate(-50%,-150%)`;
+    let show=0;
+    const always = n.type==='core'||n.type==='region'||n.type==='principle';
+    if(focus){ if(near.has(n)) show = n===focus?1:.85; }
+    else if(always){ const reach = n.type==='principle'?3.0:5.5; show = Math.max(0,Math.min(1,(reach-dCam)/1.0)) * (n.type==='principle'?.8:1); }
+    if(n===hv) show=1;
+    L.style.opacity=show;
+    L.classList.toggle('hot',n===focus);
+  });
+
+  // edges
+  edgeObjs.forEach(e=>{
+    const on = focus && (e.a===focus||e.b===focus);
+    const target = on? .75 : (focus? e.base*.35 : e.base);
+    e.mat.opacity += (target-e.mat.opacity)*.12;
+  });
+
+  // pulses
+  for(let i=pulses.length-1;i>=0;i--){
+    const p=pulses[i]; p.t+=dt*p.speed;
+    if(p.t>=1){ brain.remove(p.s); p.s.material.dispose(); pulses.splice(i,1); const dest=p.fwd?p.e.b:p.e.a; dest.flash=Math.max(dest.flash,.6*p.bright); continue; }
+    const u = p.fwd?p.t:1-p.t;
+    p.e.curve.getPoint(u,p.s.position);
+    const f = Math.sin(p.t*Math.PI);
+    p.s.material.opacity = f*(focus&&!(near.has(p.e.a)&&near.has(p.e.b))?.25:1);
+    p.s.scale.setScalar((.03+.03*f)*p.bright);
+  }
+
+  // idle: auto tour after a while
+  if(!touring && !selected && performance.now()-lastInput>45000 && !reduce){ startTour(); }
+
+  renderer.render(scene,camera);
+  requestAnimationFrame(frame);
+}
+frame();
+document.getElementById('sub').textContent = `Master your mind, master reality. ${NODES.filter(n=>n.type==='principle').length} principles, ${NODES.filter(n=>n.type==='practice').length} practices and ${NODES.filter(n=>n.type==='story').length} stories from four episodes, from Mastering the Matrix, in my own words. It grows with every stream.`;
+</script>
+</body>
+</html>
